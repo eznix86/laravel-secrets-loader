@@ -1,5 +1,5 @@
 <div align="center">
-    <h1>Laravel Secrets Loader</h1>
+    <h1>Secrets Loader for Laravel</h1>
 </div>
 
 <p align="center">
