@@ -18,7 +18,11 @@ final class PathIsAbsolute implements Guard
 
     private function isAbsolute(string $path): bool
     {
-        return $this->isRooted($path) || $this->isWindowsDrive($path);
+        if ($this->isRooted($path)) {
+            return true;
+        }
+
+        return $this->isWindowsDrive($path);
     }
 
     private function isRooted(string $path): bool
