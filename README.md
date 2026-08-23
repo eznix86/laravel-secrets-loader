@@ -41,7 +41,18 @@ Nothing in your application changes. Keep reading configuration the way you alre
 
 Directory lookups also try the lowercase filename, so `/run/secrets/db_password` works too.
 
-A real environment variable always wins, which keeps local overrides and `.env` files working exactly as before. Trailing newlines are stripped; leading and inner whitespace is preserved. If `DB_PASSWORD_FILE` points at a file that cannot be read, the package throws rather than letting your application boot with an empty credential.
+Precedence, highest first:
+
+1. A real environment variable
+2. A secret file
+3. `.env`
+4. The default passed to `env()`
+
+Lines 2 and 3 are the ones to notice. A secret file overrides `.env`, which is deliberate, since a mounted secret should beat a placeholder committed to the repository. It also means you cannot turn a file-backed value off from `.env`. Set a real environment variable for that.
+
+Trailing newlines are stripped, while leading and inner whitespace is preserved. Files above 1 MiB are rejected, so a wrong mount cannot pull something enormous into memory during boot.
+
+If `DB_PASSWORD_FILE` points at a file that is missing or unreadable, the package throws rather than letting your application boot with an empty credential. This happens while config is loading, before Laravel registers its exception handler, so over HTTP you will see a plain 500 instead of the usual error page. The message names both the path and the variable that pointed at it.
 
 ### Docker Compose
 
