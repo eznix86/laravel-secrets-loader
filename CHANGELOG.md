@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/eznix86/laravel-secrets-loader/commits/main/compare/v0.2.0...HEAD)
+## [Unreleased](https://github.com/eznix86/laravel-secrets-loader/commits/main/compare/v0.3.0...HEAD)
+
+## [v0.3.0](https://github.com/eznix86/laravel-secrets-loader/commits/main/compare/v0.2.0...v0.3.0) - 2026-08-23
+
+<!-- Release notes generated using configuration in .github/release.yml at v0.3.0 -->
+### What's Changed
+
+#### Other Changes
+
+* style: improve code quality with tests by @eznix86 in https://github.com/eznix86/laravel-secrets-loader/pull/4
+* refactor: restructure guards into contracts, policies and rules by @eznix86 in https://github.com/eznix86/laravel-secrets-loader/pull/5
+
+**Full Changelog**: https://github.com/eznix86/laravel-secrets-loader/compare/v0.2.0...v0.3.0
 
 ## [v0.2.0](https://github.com/eznix86/laravel-secrets-loader/commits/main/compare/v0.1.0...v0.2.0) - 2026-08-23
 
