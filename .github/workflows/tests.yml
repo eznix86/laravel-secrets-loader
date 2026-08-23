@@ -55,6 +55,9 @@ jobs:
       - name: PHPStan
         run: composer analyse
 
+      - name: Rector
+        run: composer refactor:check
+
       - name: Linter
         run: composer lint:check
 

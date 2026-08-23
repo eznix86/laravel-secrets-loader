@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Eznix86\LaravelSecretsLoader\SecretFileAdapter;
 use Eznix86\LaravelSecretsLoader\SecretFileException;
+use PhpOption\Option;
 
 beforeEach(function (): void {
     $this->directory = sys_get_temp_dir().'/secrets-'.bin2hex(random_bytes(6));
@@ -135,8 +136,44 @@ it('refuses names that could traverse out of the directory', function (): void {
 it('fails loudly when a suffix variable points at a missing file', function (): void {
     $_SERVER['DB_PASSWORD_FILE'] = $this->directory.'/absent';
 
-    expect(fn () => (new SecretFileAdapter)->read('DB_PASSWORD'))
+    expect(fn (): Option => (new SecretFileAdapter)->read('DB_PASSWORD'))
         ->toThrow(SecretFileException::class, 'does not exist');
+});
+
+it('ignores variables a remote client can inject through $_SERVER', function (): void {
+    $_SERVER['HTTP_PROXY_FILE'] = secret($this->directory, 'proxy', 'http://attacker.example');
+
+    expect((new SecretFileAdapter)->read('HTTP_PROXY')->isDefined())->toBeFalse();
+
+    unset($_SERVER['HTTP_PROXY_FILE']);
+});
+
+it('ignores the same injection behind an Apache redirect prefix', function (): void {
+    $_SERVER['REDIRECT_HTTP_PROXY_FILE'] = secret($this->directory, 'proxy', 'http://attacker.example');
+
+    expect((new SecretFileAdapter)->read('REDIRECT_HTTP_PROXY')->isDefined())->toBeFalse();
+
+    unset($_SERVER['REDIRECT_HTTP_PROXY_FILE']);
+});
+
+it('refuses a relative path', function (): void {
+    $_SERVER['DB_PASSWORD_FILE'] = 'secrets/db';
+
+    expect(fn (): Option => (new SecretFileAdapter)->read('DB_PASSWORD'))
+        ->toThrow(SecretFileException::class, 'must be absolute');
+});
+
+it('refuses a file larger than one mebibyte', function (): void {
+    $_SERVER['DB_PASSWORD_FILE'] = secret($this->directory, 'db', str_repeat('a', 1048577));
+
+    expect(fn (): Option => (new SecretFileAdapter)->read('DB_PASSWORD'))
+        ->toThrow(SecretFileException::class, 'is larger than 1048576 bytes');
+});
+
+it('accepts a file at exactly the limit', function (): void {
+    $_SERVER['DB_PASSWORD_FILE'] = secret($this->directory, 'db', str_repeat('a', 1048576));
+
+    expect((new SecretFileAdapter)->read('DB_PASSWORD')->get())->toHaveLength(1048576);
 });
 
 it('separates an unreadable file from a missing one', function (): void {
@@ -144,7 +181,7 @@ it('separates an unreadable file from a missing one', function (): void {
 
     chmod($path, 0000);
 
-    expect(fn () => (new SecretFileAdapter)->read('DB_PASSWORD'))
+    expect(fn (): Option => (new SecretFileAdapter)->read('DB_PASSWORD'))
         ->toThrow(SecretFileException::class, 'is not readable');
 
     chmod($path, 0600);
