@@ -41,18 +41,43 @@ Nothing in your application changes. Keep reading configuration the way you alre
 
 Directory lookups also try the lowercase filename, so `/run/secrets/db_password` works too.
 
-Precedence, highest first:
+### Which value wins
 
-1. A real environment variable
-2. A secret file
-3. `.env`
-4. The default passed to `env()`
+Say `config/database.php` reads `env('DB_PASSWORD')`. What you get:
 
-Lines 2 and 3 are the ones to notice. A secret file overrides `.env`, which is deliberate, since a mounted secret should beat a placeholder committed to the repository. It also means you cannot turn a file-backed value off from `.env`. Set a real environment variable for that.
+| What you have set | What you get |
+| --- | --- |
+| Nothing | The default in your `env()` call |
+| `DB_PASSWORD` in `.env` | The `.env` value |
+| `.env` **and** `/run/secrets/db_password` | The file |
+| `.env`, the file, **and** a real `DB_PASSWORD` variable | The real variable |
 
-Trailing newlines are stripped, while leading and inner whitespace is preserved. Files above 1 MiB are rejected, so a wrong mount cannot pull something enormous into memory during boot.
+Remember that **environment will always beat `.env`.**
 
-If `DB_PASSWORD_FILE` points at a file that is missing or unreadable, the package throws rather than letting your application boot with an empty credential. This happens while config is loading, before Laravel registers its exception handler, so over HTTP you will see a plain 500 instead of the usual error page. The message names both the path and the variable that pointed at it.
+If a secret file is handing you a value you do not want, you cannot switch it off from `.env`, because the file wins. Set a real environment variable instead, through your compose `environment:` block or an `export`.
+
+### Reading the file
+
+The newline at the end of the file is removed. Spaces are not, so a password
+that starts or ends with a space still works.
+
+Files bigger than 1 MiB are rejected. If you mount the wrong path by mistake,
+you get an error instead of a huge file loaded into memory.
+
+### When it fails
+
+If `DB_PASSWORD_FILE` points at a file that is missing, or that your app cannot
+read, it throws. It does not fall back to an empty password for example.
+
+It will tell you:
+
+```
+Secret file [/run/secrets/db_password] referenced by [DB_PASSWORD_FILE] does not exist.
+```
+
+One thing to know: this happens while Laravel is still loading config, before
+the error handler is ready. In the browser you get a plain 500 page. Run
+`php artisan about` to see the real message.
 
 ### Docker Compose
 
