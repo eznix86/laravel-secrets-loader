@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Eznix86\LaravelSecretsLoader\Sources;
 
+use Eznix86\LaravelSecretsLoader\Contracts\SecretSource;
 use Eznix86\LaravelSecretsLoader\Environment;
+use Eznix86\LaravelSecretsLoader\Guards\NamePolicy;
 use Eznix86\LaravelSecretsLoader\SecretFile;
 
 final class DirectorySource implements SecretSource
@@ -13,25 +15,43 @@ final class DirectorySource implements SecretSource
 
     private const string DEFAULT_DIRECTORY = '/run/secrets';
 
-    private const string SAFE_NAME = '/^[A-Za-z_][A-Za-z0-9_]*$/';
-
     public function locate(string $name): ?SecretFile
     {
-        if (preg_match(self::SAFE_NAME, $name) !== 1) {
+        if ((new NamePolicy)->rejects($name)) {
             return null;
         }
 
-        foreach ($this->directories() as $directory) {
-            foreach ([$name, strtolower($name)] as $filename) {
-                $path = $directory.DIRECTORY_SEPARATOR.$filename;
-
-                if (is_file($path)) {
-                    return new SecretFile($path, $name);
-                }
+        foreach ($this->candidatePaths($name) as $path) {
+            if (is_file($path)) {
+                return new SecretFile($path, $name);
             }
         }
 
         return null;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function candidatePaths(string $name): array
+    {
+        $paths = [];
+
+        foreach ($this->directories() as $directory) {
+            foreach ($this->filenamesFor($name) as $filename) {
+                $paths[] = $directory.DIRECTORY_SEPARATOR.$filename;
+            }
+        }
+
+        return $paths;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function filenamesFor(string $name): array
+    {
+        return [$name, strtolower($name)];
     }
 
     /**
@@ -44,7 +64,7 @@ final class DirectorySource implements SecretSource
         foreach (self::VARIABLES as $variable) {
             $directory = Environment::value($variable);
 
-            if ($directory !== null && $directory !== '') {
+            if ($directory !== null) {
                 $directories[] = $directory;
             }
         }

@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace Eznix86\LaravelSecretsLoader;
 
-use Eznix86\LaravelSecretsLoader\Guards\FileExists;
-use Eznix86\LaravelSecretsLoader\Guards\FileIsReadable;
-use Eznix86\LaravelSecretsLoader\Guards\FileWithinSizeLimit;
-use Eznix86\LaravelSecretsLoader\Guards\Guard;
-use Eznix86\LaravelSecretsLoader\Guards\PathIsAbsolute;
+use Eznix86\LaravelSecretsLoader\Guards\FilePolicy;
 
 final readonly class SecretFile
 {
@@ -29,9 +25,7 @@ final readonly class SecretFile
 
     public function contents(): string
     {
-        foreach ($this->guards() as $guard) {
-            $guard->check($this);
-        }
+        (new FilePolicy)->check($this);
 
         $contents = file_get_contents($this->path);
 
@@ -40,18 +34,5 @@ final readonly class SecretFile
         }
 
         return rtrim($contents, "\r\n");
-    }
-
-    /**
-     * @return list<Guard>
-     */
-    private function guards(): array
-    {
-        return [
-            new PathIsAbsolute,
-            new FileExists,
-            new FileIsReadable,
-            new FileWithinSizeLimit,
-        ];
     }
 }

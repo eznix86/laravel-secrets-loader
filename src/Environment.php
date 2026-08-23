@@ -4,24 +4,28 @@ declare(strict_types=1);
 
 namespace Eznix86\LaravelSecretsLoader;
 
+use Eznix86\LaravelSecretsLoader\Guards\NamePolicy;
+
 final class Environment
 {
-    private const string REQUEST_DATA = '/^(?:REDIRECT_)*HTTP_/';
-
     public static function value(string $name): ?string
     {
-        if (preg_match(self::REQUEST_DATA, $name) === 1) {
+        if ((new NamePolicy)->rejects($name)) {
             return null;
         }
 
         foreach ([$_ENV, $_SERVER] as $source) {
-            if (isset($source[$name]) && is_string($source[$name])) {
+            if (isset($source[$name]) && is_string($source[$name]) && $source[$name] !== '') {
                 return $source[$name];
             }
         }
 
         $value = getenv($name);
 
-        return $value === false ? null : $value;
+        if ($value === false || $value === '') {
+            return null;
+        }
+
+        return $value;
     }
 }
