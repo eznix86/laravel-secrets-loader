@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Eznix86\LaravelSecretsLoader;
 
 use Dotenv\Repository\Adapter\AdapterInterface;
+use Eznix86\LaravelSecretsLoader\Contracts\SecretSource;
 use Eznix86\LaravelSecretsLoader\Sources\DirectorySource;
-use Eznix86\LaravelSecretsLoader\Sources\SecretSource;
 use Eznix86\LaravelSecretsLoader\Sources\SuffixSource;
 use PhpOption\None;
 use PhpOption\Option;
@@ -15,26 +15,21 @@ use PhpOption\Some;
 final class SecretFileAdapter implements AdapterInterface
 {
     /**
-     * @var list<SecretSource>
-     */
-    private readonly array $sources;
-
-    /**
      * @var array<string, Option<string>>
      */
     private array $resolved = [];
-
-    public function __construct()
-    {
-        $this->sources = [new SuffixSource, new DirectorySource];
-    }
 
     /**
      * @return Option<AdapterInterface>
      */
     public static function create(): Option
     {
-        return Some::create(self::adapter());
+        return Some::create(self::newAdapter());
+    }
+
+    private static function newAdapter(): AdapterInterface
+    {
+        return new self;
     }
 
     /**
@@ -43,7 +38,11 @@ final class SecretFileAdapter implements AdapterInterface
      */
     public function read(string $name): Option
     {
-        return $this->resolved[$name] ??= $this->resolve($name);
+        if (! isset($this->resolved[$name])) {
+            $this->resolved[$name] = $this->resolve($name);
+        }
+
+        return $this->resolved[$name];
     }
 
     /**
@@ -62,9 +61,15 @@ final class SecretFileAdapter implements AdapterInterface
         return true;
     }
 
-    private static function adapter(): AdapterInterface
+    /**
+     * @return list<SecretSource>
+     */
+    private function sources(): array
     {
-        return new self;
+        return [
+            new SuffixSource,
+            new DirectorySource,
+        ];
     }
 
     /**
@@ -72,7 +77,7 @@ final class SecretFileAdapter implements AdapterInterface
      */
     private function resolve(string $name): Option
     {
-        foreach ($this->sources as $source) {
+        foreach ($this->sources() as $source) {
             $file = $source->locate($name);
 
             if ($file instanceof SecretFile) {
