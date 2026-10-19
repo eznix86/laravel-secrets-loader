@@ -38,9 +38,7 @@ final class SecretFileAdapter implements AdapterInterface
      */
     public function read(string $name): Option
     {
-        if (! isset($this->resolved[$name])) {
-            $this->resolved[$name] = $this->resolve($name);
-        }
+        $this->resolved[$name] ??= $this->resolve($name);
 
         return $this->resolved[$name];
     }
