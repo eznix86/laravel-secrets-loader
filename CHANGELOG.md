@@ -1,6 +1,18 @@
 # Release Notes
 
-## [Unreleased](https://github.com/eznix86/laravel-secrets-loader/commits/main/compare/v0.3.0...HEAD)
+## [Unreleased](https://github.com/eznix86/laravel-secrets-loader/commits/main/compare/v0.3.1...HEAD)
+
+## [v0.3.1](https://github.com/eznix86/laravel-secrets-loader/commits/main/compare/v0.3.0...v0.3.1) - 2026-10-19
+
+<!-- Release notes generated using configuration in .github/release.yml at v0.3.1 -->
+### What's Changed
+
+#### Other Changes
+
+* refactor: use null coalescing assignment in adapter read by @eznix86 in https://github.com/eznix86/laravel-secrets-loader/pull/10
+* test: cover registration through the composer autoloader by @eznix86 in https://github.com/eznix86/laravel-secrets-loader/pull/9
+
+**Full Changelog**: https://github.com/eznix86/laravel-secrets-loader/compare/v0.3.0...v0.3.1
 
 ## [v0.3.0](https://github.com/eznix86/laravel-secrets-loader/commits/main/compare/v0.2.0...v0.3.0) - 2026-08-23
 
