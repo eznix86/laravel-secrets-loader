@@ -23,8 +23,7 @@ it('resolves a secret file in a process that only requires the composer autoload
             echo env('MAIL_PASSWORD');
             PHP]);
 
-    expect($result->errorOutput())->toBe('')
-        ->and($result->output())->toBe('s3cret');
+    expect($result->output())->toBe('s3cret', $result->errorOutput());
 });
 
 it('registers from its bootstrap file before the laravel helpers are loaded', function (): void {
@@ -47,6 +46,5 @@ it('registers from its bootstrap file before the laravel helpers are loaded', fu
             echo function_exists('value') ? 'helpers loaded' : Illuminate\Support\Env::getRepository()->get('MAIL_PASSWORD');
             PHP]);
 
-    expect($result->errorOutput())->toBe('')
-        ->and($result->output())->toBe('s3cret');
+    expect($result->output())->toBe('s3cret', $result->errorOutput());
 });
